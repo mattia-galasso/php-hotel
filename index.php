@@ -38,6 +38,8 @@
     ];
 
     $only_parking = isset($_GET['only_parking']);
+    $filter_vote_enable = !empty($_GET['number_vote']);
+    $vote_number = !empty($_GET['number_vote']) ? $_GET['number_vote'] : "";
 ?>
 
 <!DOCTYPE html>
@@ -59,20 +61,24 @@
 </head>
 <body class="container w-50">
     <h1 class="text-center my-4">Hotels</h1>    
-    <div class="card my-4">
+    <div class="card my-5 w-75 m-auto">
         <div class="card-body">
             <form class="mb-0" method="GET">
-                <div class="mb-3">
-                  <label for="voteFilter" class="form-label">Fitra per Voto</label>
-                  <input type="number" class="form-control" id="voteFilter" placeholder="Inserire un numero" name="number_vote">
+                <div class="d-flex justify-content-around align-items-center">
+                    <div class="mb-3 text-center">
+                        <label for="voteFilter" class="form-label">Fitra per Voto</label>
+                        <input type="number" class="form-control" id="voteFilter" placeholder="Inserire un numero" name="number_vote" value= "<?php echo $vote_number; ?>">
+                    </div>
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox" id="parkingFilter" name="only_parking" <?php echo $only_parking ? "checked" : ""; ?>>
+                        <label class="form-check-label" for="parkingFilter">
+                            Solo Hotel Provvisti di Parcheggio
+                        </label>
+                    </div>
                 </div>
-                <div class="form-check mt-1">
-                    <input class="form-check-input" type="checkbox" id="parkingFilter" name="only_parking">
-                    <label class="form-check-label" for="parkingFilter">
-                      Solo Hotel Provvisti di Parcheggio
-                    </label>
+                <div class="d-flex justify-content-center align-items-center mt-2">
+                    <button type="submit" class="btn btn-primary m-auto">Applica Filtri</button>
                 </div>
-                <button type="submit" class="btn btn-primary mt-4">Applica Filtri</button>
             </form>
         </div>
     </div>  
@@ -88,32 +94,33 @@
       </thead>
       <tbody>
         <?php 
+            $filtered_hotels = [];
+
             foreach ($hotels as $hotel) {
-                echo "<tr>";
-                if ($only_parking && $hotel["parking"]) {
-                    foreach ($hotel as $key => $value) {
-                        if ($key == "name") {
-                        echo '<th scope="row">'. $value .'</th>';
-                        } else if ($key == "parking") {
-                        echo $value ? '<td class="text-center"><i class="bi bi-check-circle"></i></td>' : '<td class="text-center"><i class="bi bi-x-circle"></i></td>';
-                        } else {
-                        echo '<td class="text-center">' . $value . '</td>';    
-                        }
-                    } 
-                };
-                if (!$only_parking) {
-                    foreach ($hotel as $key => $value) {
-                        if ($key == "name") {
-                        echo '<th scope="row">'. $value .'</th>';
-                        } else if ($key == "parking") {
-                        echo $value ? '<td class="text-center"><i class="bi bi-check-circle"></i></td>' : '<td class="text-center"><i class="bi bi-x-circle"></i></td>';
-                        } else {
-                        echo '<td class="text-center">' . $value . '</td>';    
-                        }
-                    } 
+                $show_hotel = true;
+
+                if ($only_parking && !$hotel["parking"]) {
+                    $show_hotel = false;
                 }
+                if ($filter_vote_enable && $hotel["vote"] < $vote_number) {
+                    $show_hotel = false;
+                }
+                if ($show_hotel) {
+                    $filtered_hotels[] = $hotel;
+                }
+            }
 
-
+            foreach ($filtered_hotels as $hotel) {
+                echo "<tr>";
+                foreach ($hotel as $key => $value) {
+                    if ($key == "name") {
+                    echo '<th scope="row">'. $value .'</th>';
+                    } else if ($key == "parking") {
+                    echo $value ? '<td class="text-center"><i class="bi bi-check-circle"></i></td>' : '<td class="text-center"><i class="bi bi-x-circle"></i></td>';
+                    } else {
+                    echo '<td class="text-center">' . $value . '</td>';    
+                    }
+                }
                 echo "</tr>";
             }
         ?>
